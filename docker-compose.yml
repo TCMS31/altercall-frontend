@@ -1,0 +1,26 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        # CRA bakes these into the bundle at build time - rebuild to change them.
+        REACT_APP_GRAPHQL_URI: ${REACT_APP_GRAPHQL_URI:-http://localhost:8000/graphql}
+        REACT_APP_COACH_API_URL: ${REACT_APP_COACH_API_URL:-}
+        REACT_APP_COACH_TIMEOUT_MS: ${REACT_APP_COACH_TIMEOUT_MS:-12000}
+    image: altercall-web:latest
+    ports:
+      - "${WEB_PORT:-8560}:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

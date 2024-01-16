@@ -1,0 +1,36 @@
+# OS
+.DS_Store
+.DS_store
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output and caches
+build/
+dist/
+coverage/
+.cache/
+.eslintcache
+*.tsbuildinfo
+
+# Environment - never commit real endpoints or keys
+.env
+.env.*
+!.env.example
+
+# Editors / local tooling
+.idea/
+.vscode/
+*.swp
+project_venv/
+tmp/
+.github/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
