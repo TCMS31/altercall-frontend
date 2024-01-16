@@ -47,6 +47,41 @@ export const normalisePlanResponse = (payload, profile) => {
   });
 };
 
+const timeoutError = (timeoutMs, cause) =>
+  new CoachError(`The coaching service did not answer within ${timeoutMs}ms`, {
+    code: COACH_ERROR_CODES.timeout,
+    cause,
+  });
+
+const requestPlan = async (doFetch, url, profile, signal, timeoutMs) => {
+  try {
+    return await doFetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile),
+      signal,
+    });
+  } catch (error) {
+    if (error?.name === "AbortError") throw timeoutError(timeoutMs, error);
+    throw new CoachError("Could not reach the coaching service", {
+      code: COACH_ERROR_CODES.network,
+      cause: error,
+    });
+  }
+};
+
+const readJson = async (response, timeoutMs) => {
+  try {
+    return await response.json();
+  } catch (error) {
+    if (error?.name === "AbortError") throw timeoutError(timeoutMs, error);
+    throw new CoachError("The coaching service returned invalid JSON", {
+      code: COACH_ERROR_CODES.badResponse,
+      cause: error,
+    });
+  }
+};
+
 /**
  * Talks to a hosted coaching model. The URL is injected, never hardcoded, and an
  * unset URL simply makes the provider unavailable rather than failing at runtime.
@@ -63,48 +98,21 @@ export const createRemoteCoachProvider = ({
   async createPlan(profile) {
     const doFetch = fetchImpl ?? globalThis.fetch;
     const controller = typeof AbortController === "function" ? new AbortController() : null;
+    // The timer covers the body as well as the headers: a service that answers
+    // quickly and then stalls mid-stream would otherwise hang the planner.
     const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
-    let response;
     try {
-      response = await doFetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profile),
-        signal: controller?.signal,
-      });
-    } catch (error) {
-      if (error?.name === "AbortError") {
-        throw new CoachError(`The coaching service did not answer within ${timeoutMs}ms`, {
-          code: COACH_ERROR_CODES.timeout,
-          cause: error,
+      const response = await requestPlan(doFetch, url, profile, controller?.signal, timeoutMs);
+      if (!response.ok) {
+        throw new CoachError(`The coaching service replied with HTTP ${response.status}`, {
+          code: COACH_ERROR_CODES.failed,
         });
       }
-      throw new CoachError("Could not reach the coaching service", {
-        code: COACH_ERROR_CODES.network,
-        cause: error,
-      });
+      return normalisePlanResponse(await readJson(response, timeoutMs), profile);
     } finally {
       if (timer) clearTimeout(timer);
     }
-
-    if (!response.ok) {
-      throw new CoachError(`The coaching service replied with HTTP ${response.status}`, {
-        code: COACH_ERROR_CODES.failed,
-      });
-    }
-
-    let payload;
-    try {
-      payload = await response.json();
-    } catch (error) {
-      throw new CoachError("The coaching service returned invalid JSON", {
-        code: COACH_ERROR_CODES.badResponse,
-        cause: error,
-      });
-    }
-
-    return normalisePlanResponse(payload, profile);
   },
 });
 

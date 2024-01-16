@@ -104,4 +104,22 @@ describe("createRemoteCoachProvider", () => {
       createRemoteCoachProvider({ url, fetchImpl, timeoutMs: 5 }).createPlan(profile)
     ).rejects.toMatchObject({ code: COACH_ERROR_CODES.timeout });
   });
+
+  it("times out a reply whose body never finishes", async () => {
+    const fetchImpl = async (_url, { signal }) => ({
+      ok: true,
+      status: 200,
+      json: () =>
+        new Promise((_resolve, reject) => {
+          signal.addEventListener("abort", () => {
+            const error = new Error("aborted");
+            error.name = "AbortError";
+            reject(error);
+          });
+        }),
+    });
+    await expect(
+      createRemoteCoachProvider({ url, fetchImpl, timeoutMs: 5 }).createPlan(profile)
+    ).rejects.toMatchObject({ code: COACH_ERROR_CODES.timeout });
+  });
 });
