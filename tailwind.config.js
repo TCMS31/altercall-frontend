@@ -1,6 +1,10 @@
 /**
  * Brand colours live under `theme.extend.colors`. Defining them at `theme.colors`
  * would replace Tailwind's palette instead of adding to it.
+ *
+ * The look borrows from a gym whiteboard: chalk-paper background, pine green for
+ * actions, and a signal orange kept for the numbers a coach actually reads
+ * (sets, reps, RPE).
  */
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -8,37 +12,48 @@ export default {
   theme: {
     extend: {
       colors: {
+        paper: "#f5f2ea",
         brand: {
-          50: "#effcfb",
-          100: "#c9f7f3",
-          200: "#96ece7",
-          300: "#5ddbd6",
-          400: "#2fc0bf",
-          500: "#17a2a4",
-          600: "#0f8184",
-          700: "#11666a",
-          800: "#135255",
-          900: "#144548",
+          50: "#eef6f1",
+          100: "#d5eadd",
+          200: "#aed4bd",
+          300: "#7db896",
+          400: "#4f9870",
+          500: "#2f7b55",
+          600: "#226345",
+          700: "#1c5039",
+          800: "#18402f",
+          900: "#123224",
+          950: "#0b2017",
         },
         ink: {
-          50: "#f6f7f9",
-          100: "#eceef2",
-          200: "#d4d9e2",
-          300: "#adb7c8",
-          400: "#7f8da3",
-          500: "#5f6d85",
-          600: "#4a566b",
-          700: "#3d4657",
-          800: "#343c4a",
-          900: "#1d222c",
-          950: "#11141b",
+          50: "#f8f6f1",
+          100: "#eeebe3",
+          200: "#dcd7cb",
+          300: "#bdb6a6",
+          400: "#958d7c",
+          500: "#6b6455",
+          600: "#555044",
+          700: "#433f36",
+          800: "#2f2c26",
+          900: "#1f1d19",
+          950: "#141310",
+        },
+        signal: {
+          100: "#fde5d6",
+          400: "#f2804a",
+          500: "#e2591f",
+          600: "#c2470f",
+          700: "#a03a0d",
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
+        sans: ['"Public Sans"', "system-ui", "-apple-system", '"Segoe UI"', "sans-serif"],
+        display: ['"Barlow Condensed"', '"Arial Narrow"', "system-ui", "sans-serif"],
+        mono: ['"IBM Plex Mono"', "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
       },
       boxShadow: {
-        panel: "0 1px 2px rgba(17, 20, 27, 0.06), 0 8px 24px -12px rgba(17, 20, 27, 0.25)",
+        panel: "0 1px 0 rgba(31, 29, 25, 0.04), 0 10px 30px -18px rgba(31, 29, 25, 0.35)",
       },
       keyframes: {
         "fade-up": {

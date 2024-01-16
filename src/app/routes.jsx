@@ -10,9 +10,9 @@ const SigninPage = lazy(() => import("../features/auth/pages/SigninPage"));
 const SignupPage = lazy(() => import("../features/auth/pages/SignupPage"));
 
 const RouteFallback = () => (
-  <div className="flex min-h-screen items-center justify-center bg-ink-50" role="status">
+  <div className="flex min-h-screen items-center justify-center" role="status">
     <span className="sr-only">Loading</span>
-    <span className="h-8 w-8 animate-spin rounded-full border-2 border-ink-200 border-t-brand-600" />
+    <span className="h-8 w-8 animate-spin rounded-full border-2 border-ink-200 border-t-signal-500" />
   </div>
 );
 

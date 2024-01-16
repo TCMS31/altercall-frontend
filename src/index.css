@@ -8,33 +8,22 @@
   }
 
   body {
-    @apply bg-ink-50 text-ink-900 antialiased;
+    @apply bg-paper font-sans text-ink-900 antialiased;
     margin: 0;
-    font-family:
-      Inter,
-      system-ui,
-      -apple-system,
-      "Segoe UI",
-      Roboto,
-      "Helvetica Neue",
-      Arial,
-      sans-serif;
-  }
-
-  code,
-  .font-mono {
-    font-family:
-      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white;
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-paper;
   }
 }
 
 @media print {
-  header,
-  button {
+  button,
+  .no-print {
     display: none !important;
+  }
+
+  body {
+    background: #fff;
   }
 }

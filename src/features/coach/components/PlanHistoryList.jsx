@@ -32,16 +32,16 @@ export const PlanHistoryList = ({ history, activeId, onSelect }) => {
               onClick={() => onSelect(entry.id)}
               aria-current={isActive ? "true" : undefined}
               className={classNames(
-                "w-full rounded-xl border px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500",
+                "w-full rounded-lg border border-l-4 px-3 py-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500",
                 isActive
-                  ? "border-brand-400 bg-brand-50"
-                  : "border-ink-200 bg-white hover:border-ink-300 hover:bg-ink-50"
+                  ? "border-brand-200 border-l-brand-600 bg-brand-50"
+                  : "border-ink-200 border-l-ink-300 bg-white hover:border-l-signal-500 hover:bg-ink-50"
               )}
             >
-              <p className="truncate text-sm font-medium capitalize text-ink-900">
+              <p className="truncate text-sm font-semibold first-letter:uppercase text-ink-900">
                 {entry.headline}
               </p>
-              <p className="mt-0.5 text-xs text-ink-500">
+              <p className="mt-0.5 text-xs text-ink-600">
                 {entry.profile?.daysPerWeek ?? entry.weeklyLoad?.sessions} days ·{" "}
                 {formatTime(entry.createdAt)}
               </p>

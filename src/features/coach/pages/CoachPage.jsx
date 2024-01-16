@@ -18,24 +18,29 @@ export const CoachPage = () => {
 
   return (
     <AppShell displayName={displayName} onSignOut={signOut}>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-ink-900">Session planner</h1>
-        <p className="mt-1 max-w-2xl text-sm text-ink-500">
+      <div className="no-print mb-8">
+        <p className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-signal-600">
+          Weekly programming
+        </p>
+        <h1 className="font-display text-4xl font-bold uppercase text-ink-900 sm:text-5xl">
+          Session planner
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm text-ink-600">
           Describe the athlete once and get a structured training week you can hand over as it
           is, or edit before you send it.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <div className="space-y-6">
+        <div className="no-print space-y-6">
           <Panel>
             <PanelHeader title="Athlete profile" description="All fields are required." />
             <PanelBody>
               <CoachProfileForm onSubmit={generate} isLoading={isLoading} />
               {!isRemoteCoachConfigured() ? (
-                <p className="mt-4 text-xs leading-relaxed text-ink-500">
+                <p className="mt-4 text-xs leading-relaxed text-ink-600">
                   No hosted model is configured, so plans are built by the on-device planner.
-                  Set <code className="font-mono text-ink-700">VITE_COACH_API_URL</code> to use
+                  Set <code className="font-mono text-ink-800">VITE_COACH_API_URL</code> to use
                   a hosted one.
                 </p>
               ) : null}

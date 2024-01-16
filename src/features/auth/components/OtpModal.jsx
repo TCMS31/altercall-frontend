@@ -41,7 +41,7 @@ export const OtpModal = ({ shouldShow, onClose, onConfirmed, username, email }) 
 
   return (
     <Modal show={shouldShow} onClose={onClose} title="Confirm your email">
-      <p className="mb-4 text-sm text-ink-500">
+      <p className="mb-4 text-sm text-ink-600">
         We sent a six-digit code to {email ? <strong>{email}</strong> : "your inbox"}. Enter it
         to activate the account.
       </p>

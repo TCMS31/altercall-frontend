@@ -18,8 +18,10 @@ export const PanelHeader = ({ title, description, actions, className }) => (
     )}
   >
     <div className="min-w-0">
-      <h2 className="truncate text-base font-semibold text-ink-900">{title}</h2>
-      {description ? <p className="mt-0.5 text-sm text-ink-500">{description}</p> : null}
+      <h2 className="truncate font-display text-xl font-bold uppercase tracking-wide text-ink-900">
+        {title}
+      </h2>
+      {description ? <p className="mt-0.5 text-sm text-ink-600">{description}</p> : null}
     </div>
     {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
   </div>

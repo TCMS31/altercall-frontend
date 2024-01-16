@@ -149,7 +149,7 @@ const BLOCKS_PER_SESSION = 4;
 const rotate = (items, offset) =>
   items.map((_, index) => items[(index + offset) % items.length]);
 
-const DAY_NAMES = [
+export const DAY_NAMES = [
   "Monday",
   "Tuesday",
   "Wednesday",

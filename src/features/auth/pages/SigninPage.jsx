@@ -11,7 +11,7 @@ export const SigninPage = () => (
       <>
         Do not have an account?{" "}
         <Link
-          className="font-medium text-brand-700 underline-offset-2 hover:underline"
+          className="font-semibold text-brand-700 underline underline-offset-2 hover:text-brand-800"
           to="/signup"
         >
           Create one
