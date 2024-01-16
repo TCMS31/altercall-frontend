@@ -1,6 +1,13 @@
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-import { clearSession, isValidSession, readSession, writeSession } from "../../../lib/storage";
+import {
+  clearSession,
+  isValidSession,
+  readSession,
+  SESSION_KEY,
+  subscribeToSession,
+  writeSession,
+} from "../../../lib/storage";
 
 const SessionContext = createContext(null);
 
@@ -11,18 +18,29 @@ const SessionContext = createContext(null);
 export const SessionProvider = ({ children, initialSession = null }) => {
   const [session, setSession] = useState(() => initialSession ?? readSession());
 
+  useEffect(() => {
+    const unsubscribe = subscribeToSession(setSession);
+    // Signing in or out in another tab only shows up as a storage event here.
+    const onStorage = (event) => {
+      if (event.key === SESSION_KEY || event.key === null) setSession(readSession());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+
   const signIn = useCallback((payload) => {
     if (!isValidSession(payload)) {
       throw new Error("Sign-in did not return an access token");
     }
     writeSession(payload);
-    setSession(payload);
     return payload;
   }, []);
 
   const signOut = useCallback(() => {
     clearSession();
-    setSession(null);
   }, []);
 
   const value = useMemo(

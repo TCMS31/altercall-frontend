@@ -9,6 +9,19 @@
 
 export const SESSION_KEY = "altercall.session";
 
+// The Apollo error link clears the session outside React, so the provider needs
+// a way to hear about it; otherwise the UI stays "signed in" with no token.
+const sessionListeners = new Set();
+
+export const subscribeToSession = (listener) => {
+  sessionListeners.add(listener);
+  return () => sessionListeners.delete(listener);
+};
+
+const notifySessionListeners = (session) => {
+  sessionListeners.forEach((listener) => listener(session));
+};
+
 const createMemoryStorage = () => {
   const map = new Map();
   return {
@@ -52,11 +65,13 @@ export const writeSession = (session, storage = resolveStorage()) => {
     throw new TypeError("writeSession requires a session with an accessToken");
   }
   storage.setItem(SESSION_KEY, JSON.stringify(session));
+  notifySessionListeners(session);
   return session;
 };
 
 export const clearSession = (storage = resolveStorage()) => {
   storage.removeItem(SESSION_KEY);
+  notifySessionListeners(null);
 };
 
 /** Generic namespaced JSON helpers, used by the locally persisted plan history. */
