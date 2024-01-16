@@ -11,7 +11,7 @@ const profile = {
   daysPerWeek: 4,
 };
 
-const serviceReturning = (plan) => ({ createPlan: jest.fn(async () => plan) });
+const serviceReturning = (plan) => ({ createPlan: vi.fn(async () => plan) });
 
 describe("useCoachPlan", () => {
   beforeEach(() => {
@@ -41,7 +41,7 @@ describe("useCoachPlan", () => {
 
   it("surfaces a provider failure as an error state", async () => {
     const service = {
-      createPlan: jest.fn(async () => {
+      createPlan: vi.fn(async () => {
         throw new Error("coach offline");
       }),
     };
@@ -63,7 +63,7 @@ describe("useCoachPlan", () => {
     ];
     let resolveFirst;
     const service = {
-      createPlan: jest
+      createPlan: vi
         .fn()
         .mockImplementationOnce(
           () =>
@@ -125,7 +125,7 @@ describe("useCoachPlan", () => {
   it("keeps a plan picked from history when an older request lands later", async () => {
     let resolveSlow;
     const service = {
-      createPlan: jest
+      createPlan: vi
         .fn()
         .mockImplementationOnce(async () => ({ headline: "saved", sessions: [] }))
         .mockImplementationOnce(

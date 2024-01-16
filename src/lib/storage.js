@@ -38,7 +38,7 @@ export const resolveStorage = () => {
     window.localStorage.setItem(probe, "1");
     window.localStorage.removeItem(probe);
     return window.localStorage;
-  } catch (error) {
+  } catch {
     return createMemoryStorage();
   }
 };
@@ -55,7 +55,7 @@ export const readSession = (storage = resolveStorage()) => {
   try {
     const parsed = JSON.parse(storage.getItem(SESSION_KEY));
     return isValidSession(parsed) ? parsed : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 };
@@ -81,7 +81,7 @@ export const readJson = (key, fallback, storage = resolveStorage()) => {
     if (raw === null) return fallback;
     const parsed = JSON.parse(raw);
     return parsed === null || parsed === undefined ? fallback : parsed;
-  } catch (error) {
+  } catch {
     return fallback;
   }
 };
@@ -90,7 +90,7 @@ export const writeJson = (key, value, storage = resolveStorage()) => {
   try {
     storage.setItem(key, JSON.stringify(value));
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };

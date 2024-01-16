@@ -66,7 +66,7 @@ describe("createApolloClient", () => {
   });
 
   it("clears the session when the server rejects the token", async () => {
-    const onUnauthenticated = jest.fn();
+    const onUnauthenticated = vi.fn();
     const client = createApolloClient({
       getToken: () => "stale",
       onUnauthenticated,
@@ -82,7 +82,7 @@ describe("createApolloClient", () => {
   });
 
   it("leaves the session alone for an ordinary error", async () => {
-    const onUnauthenticated = jest.fn();
+    const onUnauthenticated = vi.fn();
     const client = createApolloClient({
       getToken: () => "good",
       onUnauthenticated,

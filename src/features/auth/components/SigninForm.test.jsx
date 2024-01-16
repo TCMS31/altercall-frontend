@@ -12,6 +12,7 @@ const successMock = {
   result: {
     data: {
       signin: {
+        __typename: "SigninMutation",
         accessToken: "token-123",
         refreshToken: "refresh-123",
         userId: "u-1",

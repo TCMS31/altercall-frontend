@@ -27,17 +27,20 @@ The app runs on http://localhost:3000. The planner works without any backend. Si
 To get into the planner without a backend, set a session in the browser console:
 
 ```js
-localStorage.setItem("altercall.session", JSON.stringify({ accessToken: "dev", userName: "Alex Morgan" }));
+localStorage.setItem(
+  "altercall.session",
+  JSON.stringify({ accessToken: "dev", userName: "Alex Morgan" })
+);
 ```
 
 ### Environment
 
-| Variable | Default | Notes |
-| --- | --- | --- |
-| `REACT_APP_GRAPHQL_URI` | `http://localhost:8000/graphql` | Auth endpoint |
-| `REACT_APP_COACH_API_URL` | empty | Hosted coaching endpoint, optional |
-| `REACT_APP_COACH_TIMEOUT_MS` | `12000` | Timeout for the hosted call |
-| `PORT` | `3000` | Dev server port |
+| Variable                     | Default                         | Notes                              |
+| ---------------------------- | ------------------------------- | ---------------------------------- |
+| `REACT_APP_GRAPHQL_URI`      | `http://localhost:8000/graphql` | Auth endpoint                      |
+| `REACT_APP_COACH_API_URL`    | empty                           | Hosted coaching endpoint, optional |
+| `REACT_APP_COACH_TIMEOUT_MS` | `12000`                         | Timeout for the hosted call        |
+| `PORT`                       | `3000`                          | Dev server port                    |
 
 CRA inlines `REACT_APP_*` values at build time, so changing them means rebuilding.
 

@@ -35,8 +35,8 @@ export const CoachPage = () => {
               {!isRemoteCoachConfigured() ? (
                 <p className="mt-4 text-xs leading-relaxed text-ink-500">
                   No hosted model is configured, so plans are built by the on-device planner.
-                  Set <code className="font-mono text-ink-700">REACT_APP_COACH_API_URL</code> to
-                  use a hosted one.
+                  Set <code className="font-mono text-ink-700">VITE_COACH_API_URL</code> to use
+                  a hosted one.
                 </p>
               ) : null}
             </PanelBody>

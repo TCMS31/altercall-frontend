@@ -1,4 +1,4 @@
-import "@testing-library/jest-dom";
+import "@testing-library/jest-dom/vitest";
 
 // jsdom has no showModal()/close() on <dialog>; Modal relies on both.
 if (

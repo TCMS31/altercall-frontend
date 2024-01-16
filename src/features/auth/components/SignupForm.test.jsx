@@ -14,7 +14,12 @@ const values = {
 const signupMock = {
   request: { query: SIGN_UP_MUTATION, variables: values },
   result: {
-    data: { signup: { user: { username: values.username, email: values.email } } },
+    data: {
+      signup: {
+        __typename: "SignupMutation",
+        user: { __typename: "UserType", username: values.username, email: values.email },
+      },
+    },
   },
 };
 
@@ -60,7 +65,9 @@ describe("SignupForm", () => {
             query: USER_CONFIRMATION_MUTATION,
             variables: { username: values.username, otp: "000000" },
           },
-          result: { data: { confirmUser: { success: false } } },
+          result: {
+            data: { confirmUser: { __typename: "ConfirmUserMutation", success: false } },
+          },
         },
       ],
     });

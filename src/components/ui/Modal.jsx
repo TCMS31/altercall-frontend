@@ -17,6 +17,8 @@ export const Modal = ({ show, title, onClose, children }) => {
   if (!show) return null;
 
   return (
+    // Escape reaches onCancel, so the backdrop click is only a pointer shortcut.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}

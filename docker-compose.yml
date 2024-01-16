@@ -3,10 +3,10 @@ services:
     build:
       context: .
       args:
-        # CRA bakes these into the bundle at build time - rebuild to change them.
-        REACT_APP_GRAPHQL_URI: ${REACT_APP_GRAPHQL_URI:-http://localhost:8000/graphql}
-        REACT_APP_COACH_API_URL: ${REACT_APP_COACH_API_URL:-}
-        REACT_APP_COACH_TIMEOUT_MS: ${REACT_APP_COACH_TIMEOUT_MS:-12000}
+        # Vite bakes these into the bundle at build time - rebuild to change them.
+        VITE_GRAPHQL_URI: ${VITE_GRAPHQL_URI:-http://localhost:8000/graphql}
+        VITE_COACH_API_URL: ${VITE_COACH_API_URL:-}
+        VITE_COACH_TIMEOUT_MS: ${VITE_COACH_TIMEOUT_MS:-12000}
     image: altercall-web:latest
     ports:
       - "${WEB_PORT:-8560}:8080"

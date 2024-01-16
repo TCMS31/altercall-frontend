@@ -35,7 +35,7 @@ describe("PlanHistoryList", () => {
   });
 
   it("reports the selected id", async () => {
-    const onSelect = jest.fn();
+    const onSelect = vi.fn();
     const user = userEvent.setup();
     render(<PlanHistoryList history={history} onSelect={onSelect} />);
 

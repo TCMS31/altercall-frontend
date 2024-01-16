@@ -21,7 +21,7 @@ describe("Modal", () => {
   });
 
   it("asks to close on Escape instead of closing itself", () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     renderModal({ show: true, onClose });
     const cancel = new Event("cancel", { cancelable: true });
     fireEvent(screen.getByRole("dialog"), cancel);
@@ -30,7 +30,7 @@ describe("Modal", () => {
   });
 
   it("closes on a backdrop click but not on a click inside", () => {
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     renderModal({ show: true, onClose });
     fireEvent.click(screen.getByRole("button", { name: /inside/i }));
     expect(onClose).not.toHaveBeenCalled();

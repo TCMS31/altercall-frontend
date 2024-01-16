@@ -49,6 +49,6 @@ describe("CoachPage", () => {
 
   it("explains that no hosted model is configured", () => {
     renderWithProviders(<CoachPage />, { session: AUTHENTICATED_SESSION });
-    expect(screen.getByText(/REACT_APP_COACH_API_URL/)).toBeInTheDocument();
+    expect(screen.getByText(/VITE_COACH_API_URL/)).toBeInTheDocument();
   });
 });

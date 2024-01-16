@@ -52,7 +52,7 @@ describe("createRemoteCoachProvider", () => {
   });
 
   it("posts the profile as JSON", async () => {
-    const fetchImpl = jest.fn(async () =>
+    const fetchImpl = vi.fn(async () =>
       jsonResponse({ sessions: [{ day: "Monday", blocks: [] }] })
     );
     await createRemoteCoachProvider({ url, fetchImpl }).createPlan(profile);

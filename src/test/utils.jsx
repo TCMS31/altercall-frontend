@@ -2,6 +2,8 @@ import { MockedProvider } from "@apollo/client/testing";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
+import { ROUTER_FUTURE } from "../app/providers/AppProviders";
+
 import { SessionProvider } from "../features/auth/session/SessionContext";
 
 export const AUTHENTICATED_SESSION = {
@@ -19,9 +21,11 @@ export const renderWithProviders = (
 ) =>
   render(ui, {
     wrapper: ({ children }) => (
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mocks={mocks}>
         <SessionProvider initialSession={session}>
-          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+          <MemoryRouter initialEntries={[route]} future={ROUTER_FUTURE}>
+            {children}
+          </MemoryRouter>
         </SessionProvider>
       </MockedProvider>
     ),
