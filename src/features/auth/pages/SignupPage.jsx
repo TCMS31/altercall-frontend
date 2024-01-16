@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 import AuthLayout from "../../../components/ui/AuthLayout";
 import SignupForm from "../components/SignupForm";

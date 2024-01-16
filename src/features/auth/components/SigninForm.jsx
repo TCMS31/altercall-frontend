@@ -1,7 +1,7 @@
 import { useMutation } from "@apollo/client";
 import { Form, Formik } from "formik";
 import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 import Alert from "../../../components/ui/Alert";
 import Button from "../../../components/ui/Button";
