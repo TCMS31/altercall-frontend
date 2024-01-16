@@ -16,7 +16,9 @@ export const STATUS = {
  * The coach service is injected (defaulting to the app-wide one) so tests can
  * pass a stub and never touch the network.
  */
-export const useCoachPlan = ({ service = getCoachService(), now = () => Date.now() } = {}) => {
+const systemNow = () => Date.now();
+
+export const useCoachPlan = ({ service = getCoachService(), now = systemNow } = {}) => {
   const [status, setStatus] = useState(STATUS.idle);
   const [plan, setPlan] = useState(null);
   const [error, setError] = useState(null);
@@ -67,17 +69,18 @@ export const useCoachPlan = ({ service = getCoachService(), now = () => Date.now
     [now, service]
   );
 
-  const selectFromHistory = useCallback((id) => {
-    setHistory((previous) => {
-      const found = previous.find((entry) => entry.id === id);
-      if (found) {
-        setPlan(found);
-        setStatus(STATUS.ready);
-        setError(null);
-      }
-      return previous;
-    });
-  }, []);
+  const selectFromHistory = useCallback(
+    (id) => {
+      const found = history.find((entry) => entry.id === id);
+      if (!found) return;
+      // Picking a saved plan wins over a generation still in flight.
+      requestId.current += 1;
+      setPlan(found);
+      setStatus(STATUS.ready);
+      setError(null);
+    },
+    [history]
+  );
 
   const reset = useCallback(() => {
     setPlan(null);

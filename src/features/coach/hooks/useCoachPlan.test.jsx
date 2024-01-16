@@ -121,4 +121,48 @@ describe("useCoachPlan", () => {
     const { result } = renderHook(() => useCoachPlan({ service: serviceReturning({}) }));
     expect(result.current.history).toHaveLength(1);
   });
+
+  it("keeps a plan picked from history when an older request lands later", async () => {
+    let resolveSlow;
+    const service = {
+      createPlan: jest
+        .fn()
+        .mockImplementationOnce(async () => ({ headline: "saved", sessions: [] }))
+        .mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              resolveSlow = () => resolve({ headline: "late", sessions: [] });
+            })
+        ),
+    };
+    const { result } = renderHook(() => useCoachPlan({ service, now: () => 3000 }));
+
+    await act(async () => {
+      await result.current.generate(profile);
+    });
+    const savedId = result.current.history[0].id;
+
+    let pending;
+    act(() => {
+      pending = result.current.generate({ ...profile, goal: "mobility" });
+    });
+    act(() => {
+      result.current.selectFromHistory(savedId);
+    });
+    await act(async () => {
+      resolveSlow();
+      await pending;
+    });
+
+    expect(result.current.plan.headline).toBe("saved");
+    expect(result.current.status).toBe(STATUS.ready);
+  });
+
+  it("ignores an unknown history id", () => {
+    const { result } = renderHook(() => useCoachPlan({ service: serviceReturning({}) }));
+    act(() => {
+      result.current.selectFromHistory("missing");
+    });
+    expect(result.current.status).toBe(STATUS.idle);
+  });
 });
