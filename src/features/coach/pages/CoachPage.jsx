@@ -1,6 +1,5 @@
-import { Button } from "../../../components/ui/flowbite";
-
 import Alert from "../../../components/ui/Alert";
+import Button from "../../../components/ui/Button";
 import AppShell from "../../../components/ui/AppShell";
 import EmptyState from "../../../components/ui/EmptyState";
 import Panel, { PanelBody, PanelHeader } from "../../../components/ui/Panel";
@@ -61,7 +60,7 @@ export const CoachPage = () => {
             description={plan ? "Generated plan" : "Nothing generated yet"}
             actions={
               plan ? (
-                <Button size="xs" color="light" onClick={() => window.print()}>
+                <Button size="sm" variant="secondary" onClick={() => window.print()}>
                   Print
                 </Button>
               ) : null

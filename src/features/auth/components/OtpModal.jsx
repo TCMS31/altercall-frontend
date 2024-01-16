@@ -1,10 +1,11 @@
 import { useMutation } from "@apollo/client";
-import { Button, Modal, Spinner } from "../../../components/ui/flowbite";
 import { Form, Formik } from "formik";
 import { useCallback, useState } from "react";
 
 import Alert from "../../../components/ui/Alert";
+import Button from "../../../components/ui/Button";
 import Field from "../../../components/ui/Field";
+import Modal from "../../../components/ui/Modal";
 import { validateOtp } from "../../../lib/validation";
 import { USER_CONFIRMATION_MUTATION } from "../api/mutations";
 
@@ -39,48 +40,38 @@ export const OtpModal = ({ shouldShow, onClose, onConfirmed, username, email }) 
   );
 
   return (
-    <Modal show={shouldShow} onClose={onClose} size="md" dismissible>
-      <Modal.Header>Confirm your email</Modal.Header>
-      <Modal.Body>
-        <p className="mb-4 text-sm text-ink-500">
-          We sent a six-digit code to {email ? <strong>{email}</strong> : "your inbox"}. Enter
-          it to activate the account.
-        </p>
-        <Formik initialValues={{ otp: "" }} validate={validateOtp} onSubmit={handleSubmit}>
-          {({ isSubmitting }) => (
-            <Form className="space-y-4" noValidate>
-              {formError ? (
-                <Alert tone="error" title="Confirmation failed">
-                  {formError}
-                </Alert>
-              ) : null}
-              <Field
-                name="otp"
-                label="Confirmation code"
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="123456"
-                required
-              />
-              <div className="flex justify-end gap-2">
-                <Button color="light" type="button" onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button color="brand" type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Spinner size="sm" aria-hidden="true" />
-                      <span className="ml-2">Confirming…</span>
-                    </>
-                  ) : (
-                    "Confirm"
-                  )}
-                </Button>
-              </div>
-            </Form>
-          )}
-        </Formik>
-      </Modal.Body>
+    <Modal show={shouldShow} onClose={onClose} title="Confirm your email">
+      <p className="mb-4 text-sm text-ink-500">
+        We sent a six-digit code to {email ? <strong>{email}</strong> : "your inbox"}. Enter it
+        to activate the account.
+      </p>
+      <Formik initialValues={{ otp: "" }} validate={validateOtp} onSubmit={handleSubmit}>
+        {({ isSubmitting }) => (
+          <Form className="space-y-4" noValidate>
+            {formError ? (
+              <Alert tone="error" title="Confirmation failed">
+                {formError}
+              </Alert>
+            ) : null}
+            <Field
+              name="otp"
+              label="Confirmation code"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="123456"
+              required
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button type="submit" busy={isSubmitting} busyLabel="Confirming…">
+                Confirm
+              </Button>
+            </div>
+          </Form>
+        )}
+      </Formik>
     </Modal>
   );
 };

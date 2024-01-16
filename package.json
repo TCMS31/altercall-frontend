@@ -9,8 +9,6 @@
   "dependencies": {
     "@apollo/client": "^3.8.6",
     "classnames": "^2.5.1",
-    "flowbite": "^2.2.1",
-    "flowbite-react": "^0.7.2",
     "formik": "^2.4.5",
     "graphql": "^15.8.0",
     "react": "^18.2.0",
@@ -88,9 +86,6 @@
         "functions": 80,
         "lines": 85
       }
-    },
-    "moduleNameMapper": {
-      "^flowbite-react/components/(.*)$": "<rootDir>/node_modules/flowbite-react/lib/cjs/components/$1"
     }
   },
   "browserslist": {

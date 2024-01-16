@@ -1,16 +1,14 @@
-// Loaded automatically by Create React App's Jest setup.
 import "@testing-library/jest-dom";
 
-// jsdom does not implement these, and flowbite-react / the print button use them.
-if (typeof window.matchMedia !== "function") {
-  window.matchMedia = (query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    dispatchEvent: () => false,
-  });
+// jsdom has no showModal()/close() on <dialog>; Modal relies on both.
+if (
+  typeof HTMLDialogElement !== "undefined" &&
+  typeof HTMLDialogElement.prototype.showModal !== "function"
+) {
+  HTMLDialogElement.prototype.showModal = function showModal() {
+    this.setAttribute("open", "");
+  };
+  HTMLDialogElement.prototype.close = function close() {
+    this.removeAttribute("open");
+  };
 }

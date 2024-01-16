@@ -1,10 +1,10 @@
 import { useMutation } from "@apollo/client";
-import { Button, Spinner } from "../../../components/ui/flowbite";
 import { Form, Formik } from "formik";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Alert from "../../../components/ui/Alert";
+import Button from "../../../components/ui/Button";
 import Field from "../../../components/ui/Field";
 import { validateSignin } from "../../../lib/validation";
 import { SIGNIN_MUTATION } from "../api/mutations";
@@ -73,15 +73,8 @@ export const SigninForm = ({ redirectTo = "/" }) => {
             required
           />
 
-          <Button type="submit" color="brand" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <Spinner size="sm" aria-hidden="true" />
-                <span className="ml-2">Signing in…</span>
-              </>
-            ) : (
-              "Sign in"
-            )}
+          <Button type="submit" className="w-full" busy={isSubmitting} busyLabel="Signing in…">
+            Sign in
           </Button>
         </Form>
       )}

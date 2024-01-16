@@ -1,6 +1,6 @@
-import { Button, Spinner } from "../../../components/ui/flowbite";
 import { Form, Formik } from "formik";
 
+import Button from "../../../components/ui/Button";
 import Field from "../../../components/ui/Field";
 import { validateCoachProfile } from "../../../lib/validation";
 import { EXPERIENCE_LEVELS, GOALS } from "../../../services/coach/planner";
@@ -61,15 +61,8 @@ export const CoachProfileForm = ({ onSubmit, isLoading, initialValues = DEFAULT_
           />
           <Field name="daysPerWeek" label="Availability" options={DAY_OPTIONS} required />
 
-          <Button type="submit" color="brand" className="w-full" disabled={busy}>
-            {busy ? (
-              <>
-                <Spinner size="sm" aria-hidden="true" />
-                <span className="ml-2">Building plan…</span>
-              </>
-            ) : (
-              "Generate plan"
-            )}
+          <Button type="submit" className="w-full" busy={busy} busyLabel="Building plan…">
+            Generate plan
           </Button>
         </Form>
       );

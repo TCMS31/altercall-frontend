@@ -1,6 +1,5 @@
-import { Badge } from "../../../components/ui/flowbite";
-
 import Alert from "../../../components/ui/Alert";
+import Badge from "../../../components/ui/Badge";
 import StatTile from "../../../components/ui/StatTile";
 
 const minutesToLabel = (minutes) => {
@@ -18,11 +17,9 @@ export const PlanView = ({ plan }) => {
     <article className="animate-fade-up space-y-6">
       <header className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge color="info">{plan.providerLabel ?? "Built-in planner"}</Badge>
+          <Badge tone="brand">{plan.providerLabel ?? "Built-in planner"}</Badge>
           {plan.focusAreas?.slice(0, 2).map((area) => (
-            <Badge key={area} color="gray">
-              {area}
-            </Badge>
+            <Badge key={area}>{area}</Badge>
           ))}
         </div>
         <h3 className="text-xl font-semibold capitalize text-ink-900">{plan.headline}</h3>

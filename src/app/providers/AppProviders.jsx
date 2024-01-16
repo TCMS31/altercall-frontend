@@ -1,8 +1,6 @@
 import { ApolloProvider } from "@apollo/client";
-import { Flowbite } from "../../components/ui/flowbite";
 import { BrowserRouter } from "react-router-dom";
 
-import flowbiteTheme from "../../components/ui/flowbiteTheme";
 import { SessionProvider } from "../../features/auth/session/SessionContext";
 
 /**
@@ -12,11 +10,9 @@ import { SessionProvider } from "../../features/auth/session/SessionContext";
  */
 export const AppProviders = ({ client, children, router: Router = BrowserRouter }) => (
   <ApolloProvider client={client}>
-    <Flowbite theme={{ theme: flowbiteTheme }}>
-      <SessionProvider>
-        <Router>{children}</Router>
-      </SessionProvider>
-    </Flowbite>
+    <SessionProvider>
+      <Router>{children}</Router>
+    </SessionProvider>
   </ApolloProvider>
 );
 

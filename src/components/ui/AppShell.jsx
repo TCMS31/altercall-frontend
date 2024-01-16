@@ -1,5 +1,4 @@
-import { Button } from "./flowbite";
-
+import Button from "./Button";
 import Logo from "./Logo";
 
 /** Signed-in chrome: header with the current user and a sign-out control. */
@@ -13,7 +12,7 @@ export const AppShell = ({ displayName, onSignOut, children }) => (
             <p className="text-sm font-medium leading-tight text-ink-900">{displayName}</p>
             <p className="text-xs leading-tight text-ink-500">Coaching workspace</p>
           </div>
-          <Button size="xs" color="light" onClick={onSignOut}>
+          <Button size="sm" variant="secondary" onClick={onSignOut}>
             Sign out
           </Button>
         </div>

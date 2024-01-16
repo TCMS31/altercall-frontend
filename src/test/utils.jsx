@@ -1,9 +1,7 @@
 import { MockedProvider } from "@apollo/client/testing";
-import { Flowbite } from "../components/ui/flowbite";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-import flowbiteTheme from "../components/ui/flowbiteTheme";
 import { SessionProvider } from "../features/auth/session/SessionContext";
 
 export const AUTHENTICATED_SESSION = {
@@ -22,11 +20,9 @@ export const renderWithProviders = (
   render(ui, {
     wrapper: ({ children }) => (
       <MockedProvider mocks={mocks} addTypename={false}>
-        <Flowbite theme={{ theme: flowbiteTheme }}>
-          <SessionProvider initialSession={session}>
-            <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
-          </SessionProvider>
-        </Flowbite>
+        <SessionProvider initialSession={session}>
+          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+        </SessionProvider>
       </MockedProvider>
     ),
     ...options,

@@ -1,5 +1,3 @@
-import flowbitePlugin from "flowbite/plugin";
-
 /**
  * Tailwind is enabled by Create React App purely because this file exists
  * (react-scripts injects the `tailwindcss` PostCSS plugin when it finds one),
@@ -12,10 +10,7 @@ import flowbitePlugin from "flowbite/plugin";
  * happen here and silently deleted `cyan`, `sky`, `slate` and friends.
  */
 /** @type {import('tailwindcss').Config} */
-export const content = [
-  "./src/**/*.{js,jsx,ts,tsx}",
-  "./node_modules/flowbite-react/**/*.{js,jsx,ts,tsx}",
-];
+export const content = ["./src/**/*.{js,jsx,ts,tsx}"];
 
 export const darkMode = "class";
 
@@ -66,4 +61,4 @@ export const theme = {
   },
 };
 
-export const plugins = [flowbitePlugin];
+export const plugins = [];
