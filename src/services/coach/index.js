@@ -19,14 +19,13 @@ export const createCoachService = ({ registry, logger = console } = {}) => {
       ]);
     })();
 
-  let lastFailure;
-
   const createPlan = async (profile) => {
     const candidates = resolved.available();
     if (candidates.length === 0) {
       throw new Error("No coaching provider is available");
     }
 
+    let lastFailure;
     for (let index = 0; index < candidates.length; index += 1) {
       const provider = candidates[index];
       const isLast = index === candidates.length - 1;
