@@ -50,12 +50,25 @@ describe("validatePassword", () => {
 
 describe("validateSignin", () => {
   it("returns no errors for a complete form", () => {
-    expect(validateSignin({ email: "alex@altercall.com", password: "anything" })).toEqual({});
+    expect(validateSignin({ identifier: "alex@altercall.com", password: "anything" })).toEqual(
+      {}
+    );
+  });
+
+  it("accepts a username as well as an email", () => {
+    expect(validateSignin({ identifier: "alex.morgan", password: "anything" })).toEqual({});
+  });
+
+  it("checks the shape of whichever identifier was typed", () => {
+    expect(validateSignin({ identifier: "alex@", password: "x" }).identifier).toMatch(
+      /valid email/i
+    );
+    expect(validateSignin({ identifier: "a b", password: "x" }).identifier).toBeDefined();
   });
 
   it("flags both fields when empty", () => {
     expect(validateSignin({})).toEqual({
-      email: expect.any(String),
+      identifier: expect.any(String),
       password: expect.any(String),
     });
   });

@@ -63,9 +63,15 @@ const validateNumberInRange = (value, { label, min, max }) => {
   return undefined;
 };
 
+/** Sign-in takes whatever the account was created with: its email or its username. */
+export const validateIdentifier = (value) => {
+  if (isBlank(value)) return "Enter your email or username";
+  return String(value).includes("@") ? validateEmail(value) : validateUsername(value);
+};
+
 export const validateSignin = (values = {}) =>
   compact({
-    email: validateEmail(values.email),
+    identifier: validateIdentifier(values.identifier),
     password: isBlank(values.password) ? "Password is required" : undefined,
   });
 

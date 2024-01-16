@@ -10,7 +10,9 @@ import { validateSignin } from "../../../lib/validation";
 import { SIGNIN_MUTATION } from "../api/mutations";
 import { useSession } from "../session/SessionContext";
 
-const INITIAL_VALUES = { email: "", password: "" };
+const INITIAL_VALUES = { identifier: "", password: "" };
+
+const REJECTED_CREDENTIALS = "That email or username and password did not match an account.";
 
 export const SigninForm = ({ redirectTo = "/" }) => {
   const navigate = useNavigate();
@@ -23,12 +25,16 @@ export const SigninForm = ({ redirectTo = "/" }) => {
       setFormError(null);
       try {
         const { data } = await signinMutation({
-          variables: { username: values.email.trim(), password: values.password },
+          variables: { username: values.identifier.trim(), password: values.password },
         });
 
         // The server answers 200 with a null payload for bad credentials, so an
         // absent access token has to be treated as a failure rather than a login.
-        signIn(data?.signin);
+        if (!data?.signin?.accessToken) {
+          setFormError(REJECTED_CREDENTIALS);
+          return;
+        }
+        signIn(data.signin);
         navigate(redirectTo, { replace: true });
       } catch (error) {
         setFormError(error?.message ?? "We could not sign you in. Please try again.");
@@ -50,10 +56,11 @@ export const SigninForm = ({ redirectTo = "/" }) => {
           ) : null}
 
           <Field
-            name="email"
-            label="Email"
-            type="email"
-            autoComplete="email"
+            name="identifier"
+            label="Email or username"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
             placeholder="coach@altercall.com"
             required
           />

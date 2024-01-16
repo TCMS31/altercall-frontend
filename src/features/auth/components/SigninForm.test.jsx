@@ -23,7 +23,7 @@ const successMock = {
 };
 
 const fillAndSubmit = async (user) => {
-  await user.type(screen.getByLabelText(/email/i), variables.username);
+  await user.type(screen.getByLabelText(/email or username/i), variables.username);
   await user.type(screen.getByLabelText(/password/i), variables.password);
   await user.click(screen.getByRole("button", { name: /sign in/i }));
 };
@@ -39,9 +39,7 @@ describe("SigninForm", () => {
 
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
-    expect(
-      await screen.findByText(/enter a valid email address|email is required/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/enter your email or username/i)).toBeInTheDocument();
     expect(screen.getByText(/password is required/i)).toBeInTheDocument();
   });
 
@@ -89,7 +87,30 @@ describe("SigninForm", () => {
 
     await fillAndSubmit(user);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/access token/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/did not match an account/i);
     expect(window.localStorage.getItem(SESSION_KEY)).toBeNull();
+  });
+
+  it("signs in with the username chosen at sign-up", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SigninForm />, {
+      mocks: [
+        {
+          request: {
+            query: SIGNIN_MUTATION,
+            variables: { username: "alex.morgan", password: variables.password },
+          },
+          result: successMock.result,
+        },
+      ],
+    });
+
+    await user.type(screen.getByLabelText(/email or username/i), "alex.morgan");
+    await user.type(screen.getByLabelText(/password/i), variables.password);
+    await user.click(screen.getByRole("button", { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(window.localStorage.getItem(SESSION_KEY)).not.toBeNull();
+    });
   });
 });
