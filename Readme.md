@@ -1,126 +1,127 @@
 # ALTERCALL Web
 
-A React front end for a coaching platform. Coaches sign up, confirm their email with a
-one-time code and sign in against a GraphQL backend; once inside, they describe an
-athlete and get a structured weekly training plan back — sessions, movements,
-prescriptions and coaching notes — which is saved locally so previous plans stay one
-click away.
+The coach-facing front end of the AlterCall coaching platform. A coach signs up,
+confirms their email with a one-time code, signs in, then describes an athlete once —
+age, height, goal, experience, days available — and gets a structured training week
+back: sessions, prescribed movements, a weekly load summary and coaching notes.
 
-Plan generation goes through a provider interface. If a hosted coaching model is
-configured the app calls it; if it is not configured, or it fails, a deterministic
-planner that ships with the bundle produces the plan in the browser. The app is
-therefore fully usable with no AI credentials and no coaching backend.
+The product decision that shapes the whole codebase is that **a plan always arrives**.
+Plan generation goes through a provider interface, and a deterministic planner ships
+inside the bundle as the last provider in the chain. With no coaching backend, no API
+key and no network, the planner still works — which is also why the screenshots below
+could be captured without a server running.
 
-## Screenshots
+## What a coach sees
 
 | Sign in                                           | Create account                                    |
 | ------------------------------------------------- | ------------------------------------------------- |
 | ![Sign-in screen](docs/screenshots/01-signin.png) | ![Sign-up screen](docs/screenshots/02-signup.png) |
 
-![Session planner with a generated strength plan](docs/screenshots/03-planner.png)
+The two auth shots are empty forms — there is nothing to populate until a backend is
+answering. The planner shots are real output:
 
-![A previous plan restored from local history](docs/screenshots/04-plan-history.png)
+![Session planner with a generated four-day strength plan](docs/screenshots/03-planner.png)
 
-Captured with Playwright at 1440x900 against a production build served locally
-(`scripts/capture-screenshots.mjs`). The plans shown are real output from the built-in
-planner, not mock-ups.
+![A previously generated endurance plan restored from local history](docs/screenshots/04-plan-history.png)
 
-## Architecture
+Three plans were generated through the real UI before the last shot was taken, which is
+why the history panel has entries in it. All four are 1440x900, captured by
+`scripts/capture-screenshots.mjs` (Playwright, Chromium) against a production build
+served locally.
 
-```mermaid
-graph TD
-  subgraph browser["Browser"]
-    entry["index.js"] --> providers["AppProviders<br/>Apollo · Flowbite theme · Session · Router"]
-    providers --> routes["AppRoutes<br/>lazy route chunks"]
-    routes --> guard["RequireAuth"]
-    routes --> authpages["Auth pages<br/>SigninForm · SignupForm · OtpModal"]
-    guard --> coach["CoachPage<br/>CoachProfileForm · PlanView · PlanHistoryList"]
-  end
+## Why a plan always arrives
 
-  subgraph hooks["Feature logic"]
-    session["SessionContext"]
-    useplan["useCoachPlan"]
-  end
+`src/services/coach/registry.js` is the extension seam. A provider is an object:
 
-  subgraph services["Services"]
-    apollo["Apollo client<br/>auth link · error link"]
-    registry["Coach registry"]
-    remote["Remote coach provider"]
-    local["Built-in planner"]
-  end
-
-  subgraph libs["Pure modules"]
-    validation["validation.js"]
-    storage["storage.js"]
-    planner["planner.js"]
-  end
-
-  authpages --> session
-  coach --> useplan
-  authpages --> apollo
-  session --> storage
-  useplan --> registry
-  registry --> remote
-  registry --> local
-  local --> planner
-  authpages --> validation
-  coach --> validation
-  apollo --> storage
-  apollo --> gql["GraphQL API"]
-  remote --> model["Hosted coaching model"]
+```
+{ id, label, priority, isAvailable(), createPlan(profile) }
 ```
 
-Dependencies point inward: pages depend on feature hooks, hooks depend on services,
-services depend on pure modules. Nothing in `src/lib` or `src/services` imports React.
+The registry validates that contract at `register()` time, sorts by descending
+`priority` and hands back everything whose `isAvailable()` is true. `services/coach/index.js`
+then walks that list: the first provider to return a plan wins, and a provider that
+throws is logged and the next one is tried. Only the last failure propagates.
 
-## Plan generation flow
+Two providers ship. `remoteCoachProvider` (priority 10) POSTs the profile to
+`REACT_APP_COACH_API_URL` behind an `AbortController` timeout, maps every failure mode
+onto a `CoachError` code — `timeout`, `network`, `failed`, `badResponse` — and normalises
+both the structured plan shape and a legacy `{ workoutSuggestion }` string. It reports
+itself unavailable when no URL is configured, so an unset variable is a routing decision
+rather than a runtime error. `localCoachProvider` (priority 0) is always available and
+calls the pure planner in `src/services/coach/planner.js`.
+
+When a lower-priority provider answers, the result is flagged `degraded: true` with
+`degradedReason` set to the upstream failure, so the UI can say a fallback happened
+instead of quietly pretending the hosted model replied.
+
+## What the right-hand panel is doing
+
+`useCoachPlan` owns this and nothing else owns any of it — the page reads `status` and
+renders one of four things.
 
 ```mermaid
-sequenceDiagram
-  actor Coach
-  participant Form as CoachProfileForm
-  participant Hook as useCoachPlan
-  participant Service as Coach service
-  participant Remote as Remote provider
-  participant Local as Built-in planner
-  participant Store as localStorage
+stateDiagram-v2
+    [*] --> Idle
+    Idle: Empty panel prompting for the athlete profile
+    Loading: Skeleton that mirrors the plan layout
+    Ready: PlanView rendered, Print enabled, entry saved to history
+    Failed: Inline alert carrying the provider's own reason
 
-  Coach->>Form: Enter age, height, goal, experience, days
-  Form->>Form: validateCoachProfile
-  Form->>Hook: generate(profile)
-  Hook->>Hook: status = loading
-  Hook->>Service: createPlan(profile)
-  Service->>Service: registry.available() ordered by priority
+    Idle --> Loading: generate(profile) once validateCoachProfile passes
+    Loading --> Ready: a provider returned a plan and this is still the newest request
+    Loading --> Failed: every available provider threw
+    Loading --> Loading: a newer generate(profile) supersedes this one
+    Ready --> Loading: generate(profile) again
+    Failed --> Loading: generate(profile) again
+    Ready --> Ready: selectFromHistory(id) restores a saved plan
 
-  alt Hosted model configured
-    Service->>Remote: POST profile (AbortController timeout)
-    alt Remote answers
-      Remote-->>Service: plan
-    else Timeout, network error or bad payload
-      Remote-->>Service: CoachError
-      Service->>Local: createPlan(profile)
-      Local-->>Service: plan (degraded = true)
-    end
-  else No hosted model
-    Service->>Local: createPlan(profile)
-    Local-->>Service: plan
-  end
-
-  Service-->>Hook: plan + providerId + degraded flag
-  Hook->>Store: append to capped plan history
-  Hook-->>Coach: status = ready, plan rendered
+    note right of Loading
+        A response whose request id is no longer current is dropped, so a
+        slow answer can never overwrite a newer plan. The same check stops
+        a setState after unmount.
+    end note
 ```
 
-## Quickstart
+Plan history is `localStorage`, newest first, capped at eight entries
+(`HISTORY_LIMIT` in `src/features/coach/planHistory.js`) so it cannot grow without
+bound. Selecting an entry re-renders it without regenerating anything.
+
+## The three mutations it sends
+
+Everything that leaves this app for the identity service is in
+`src/features/auth/api/mutations.js`:
+
+```graphql
+signup(username, name, password, email) { user { username email } }
+confirmUser(username, otp)              { success }
+signin(username, password)              { accessToken refreshToken userId userName userEmail }
+```
+
+The server is the sibling `altercall-fitness` repo. `signin` returning flat
+`userId` / `userName` / `userEmail` beside the tokens is the shape this client reads, and
+those three fields are what `SessionContext` uses for the display name.
+
+`src/services/apollo/client.js` builds the client from three links: an error link that
+clears the stored session on `UNAUTHENTICATED`, `FORBIDDEN` or HTTP 401, an auth link
+that attaches `Authorization: Bearer <accessToken>` when there is one, and the HTTP
+link. Every dependency is injected — URI, token getter, sign-out callback, even the
+terminating link — which is why the auth behaviour is unit-tested with no network.
+
+Layering, in one sentence: `src/lib/` and `src/services/` are plain modules that import
+no React, `src/features/{auth,coach}` adapt them through hooks and components,
+`src/app/` is the composition root, and `src/config/env.js` is the only file that reads
+`process.env`.
+
+## Running it
 
 ```sh
 npm install
 npm start          # http://localhost:3000
 ```
 
-No backend is required to use the planner. Sign-up and sign-in do need a GraphQL API —
-point `REACT_APP_GRAPHQL_URI` at it. To look around the planner without one, run the
-app and set a session in the browser console:
+The planner needs no backend. Sign-up and sign-in do — point `REACT_APP_GRAPHQL_URI` at
+a GraphQL server. To walk straight into the planner without one, start the app and put a
+session in the browser console:
 
 ```js
 localStorage.setItem(
@@ -129,44 +130,18 @@ localStorage.setItem(
 );
 ```
 
-## Configuration
-
-Copy `.env.example` to `.env.local`. Create React App only exposes variables prefixed
-with `REACT_APP_`, and it inlines them **at build time** — changing one means rebuilding.
-
-| Variable                     | Required | Default                         | Purpose                                                                   |
-| ---------------------------- | -------- | ------------------------------- | ------------------------------------------------------------------------- |
-| `REACT_APP_GRAPHQL_URI`      | No       | `http://localhost:8000/graphql` | GraphQL endpoint for sign-up, sign-in and OTP confirmation.               |
-| `REACT_APP_COACH_API_URL`    | No       | _(empty)_                       | Hosted coaching model endpoint. Empty means the built-in planner is used. |
-| `REACT_APP_COACH_TIMEOUT_MS` | No       | `12000`                         | Abort the hosted coaching call after this many milliseconds.              |
-| `PORT`                       | No       | `3000`                          | Dev server port.                                                          |
-| `WEB_PORT`                   | No       | `8560`                          | Host port published by `docker-compose.yml`.                              |
-
-No provider API key is read in the browser. `REACT_APP_COACH_API_URL` is expected to
-point at a server-side endpoint that holds any credentials.
-
-## Development
-
 ```sh
-npm start              # dev server with hot reload
-npm test               # Jest + React Testing Library, watch mode
-npm run test:ci        # single run, no watcher
-npm run test:ci -- --coverage
-npm run lint           # ESLint, zero warnings tolerated
-npm run format         # Prettier
-npm run build          # production bundle into build/
+npm run test:ci                  # 16 suites, 134 tests
+npm run test:ci -- --coverage    # thresholds committed at 85/70/80/85
+npm run lint                     # ESLint, --max-warnings 0
+npm run format:check             # Prettier
+npm run build                    # production bundle into build/
 ```
 
-Docker:
-
-```sh
-docker compose up --build        # serves the production build on http://localhost:8560
-```
-
-The image is multi-stage (Node build, nginx runtime), runs as the non-root `nginx`
-user on port 8080 inside the container, and has a healthcheck. The Docker image has
-**not** been built or booted in this environment — the Dockerfile and compose file are
-authored but unverified; `docker compose config` parses cleanly.
+The suite runs in under four seconds because most of it never mounts a component:
+validation, storage, the planner, the registry, remote-provider error mapping and the
+Apollo links are all plain-module tests. The rest drive real components through a mocked
+Apollo link.
 
 To regenerate the screenshots:
 
@@ -177,102 +152,72 @@ npx playwright install chromium
 BASE_URL=http://127.0.0.1:8560 node scripts/capture-screenshots.mjs
 ```
 
-## Project structure
+`Dockerfile` is multi-stage (`node:20-alpine` build, `nginx:1.27-alpine` runtime) and
+runs as the non-root `nginx` user on unprivileged port 8080, with `docker-compose.yml`
+publishing `${WEB_PORT:-8560}` and mounting the root filesystem read-only. CRA inlines
+`REACT_APP_*` at build time, so those arrive as **build args**, not runtime environment.
+`docker compose config` parses, but the image has **not been built or booted here** —
+treat it as authored and unverified.
 
-```
-src/
-  app/                      Composition root
-    App.jsx                 Providers + routes, nothing else
-    routes.jsx              Route table with lazy page chunks
-    providers/              Apollo, Flowbite theme, Session, Router
-  config/
-    env.js                  The only place process.env is read
-  lib/                      Pure, framework-free modules
-    validation.js           Form rules shared by every form
-    storage.js              Safe localStorage: JSON, quota and private-mode safe
-  services/
-    apollo/client.js        Apollo client, auth link, 401 handling, cache policy
-    coach/
-      registry.js           Provider registry - the extension seam
-      planner.js            Built-in planner (pure domain logic)
-      providers/            Remote HTTP provider and the local provider
-      index.js              Wiring plus the fallback policy
-  features/
-    auth/                   Mutations, session context, forms, route guard, pages
-    coach/                  Plan hook, plan history, planner components and page
-  components/ui/            Shared presentational kit (Panel, Field, Alert, ...)
-  test/utils.jsx            Render helper that mirrors the real provider tree
-docs/screenshots/           README images
-scripts/                    Screenshot capture
-```
+## What it reads from the environment
 
-## Design notes
+Copy `.env.example` to `.env.local`. Create React App only exposes `REACT_APP_*`
+variables and inlines them at build time, so changing one means rebuilding.
 
-**Layering.** The original app put network calls, storage writes and validation inline
-in three form components. Business logic now lives in `src/lib` and `src/services`,
-which are plain JavaScript modules with no React import; feature hooks adapt them to
-components; components render. That is why 134 tests run in about five seconds with no
-browser and no backend — most of them never mount a component.
+| Variable                     | Default                         | Purpose                                                                       |
+| ---------------------------- | ------------------------------- | ----------------------------------------------------------------------------- |
+| `REACT_APP_GRAPHQL_URI`      | `http://localhost:8000/graphql` | Identity service endpoint for sign-up, OTP confirmation and sign-in.          |
+| `REACT_APP_COACH_API_URL`    | _(empty)_                       | Hosted coaching model. Empty means the built-in planner is the only provider. |
+| `REACT_APP_COACH_TIMEOUT_MS` | `12000`                         | Abort the hosted coaching call after this many milliseconds.                  |
+| `PORT`                       | `3000`                          | Dev server port.                                                              |
+| `WEB_PORT`                   | `8560`                          | Host port published by `docker-compose.yml`.                                  |
 
-**The provider seam.** Coaching backends are the one thing about this product that is
-certain to change, so that is where the extension point went. A provider is
-`{ id, label, priority, isAvailable(), createPlan(profile) }`; the registry resolves the
-highest-priority available one, and the service falls back down the list on failure,
-marking the resulting plan `degraded` so the UI can say so instead of silently lying.
-Adding a vendor is one file and one `register()` call.
+No provider API key is read in the browser. `REACT_APP_COACH_API_URL` is expected to
+point at a server-side endpoint that holds any credentials.
 
-**Graceful degradation is the default, not the error path.** The built-in planner is a
-real feature, not a stub: deterministic rules produce a four-movement session per
-training day, scaled by experience, with notes keyed off age and height. With no
-`REACT_APP_COACH_API_URL` set the app is fully functional, which is also what makes the
-screenshots above reproducible without any credentials.
+## Where the bytes went
 
-**Scalability — where the bytes actually went.** For a front end of this size the
-bottleneck is the bundle, not the server. Two measurements drove the work:
+`npm run build` reports `main.js` at **131.37 kB gzipped**. Getting there was one file.
 
-- The original build produced a single `main.js` of **174.53 kB gzipped**.
-- `flowbite-react@0.7` does not declare `sideEffects: false`, so importing from its
-  package root defeats tree-shaking and pulls in Datepicker, Carousel, `react-markdown`
-  and `react-icons` whether you use them or not. Routing the eight components this app
-  uses through one barrel of deep imports (`src/components/ui/flowbite.js`) cut the main
-  chunk from **155.48 kB to 131.37 kB gzipped**, and the total JS transferred on the
-  sign-in route from **176.6 kB to 153.1 kB gzipped** (measured with Playwright against
-  a local static server, gzip level 9).
+flowbite-react 0.7.2 declares no `sideEffects` field in its `package.json` — check it
+with `node -e "console.log(require('flowbite-react/package.json').sideEffects)"` — so
+importing from the package root defeats tree-shaking and drags in Datepicker, Carousel,
+`react-markdown` and `react-icons` whether you use them or not. `src/components/ui/flowbite.js`
+is a barrel that re-exports the eight components this app actually uses from their
+individual folders. Re-point that one file at `"flowbite-react"` and rebuild to see the
+difference: **155.22 kB**, a 23.85 kB regression on every route.
 
-Route-level code splitting is also in place, but honesty about its effect: because every
-route uses the same UI kit, it only keeps the sign-up page's own code (about 4 kB
-gzipped) off the sign-in route. It is worth keeping as the app grows; it is not where
-the win came from.
+The trade-off is that those are deep paths into the package's build output, not
+published subpath exports, so a flowbite-react upgrade will need that file revisited.
+Jest maps them to the CJS build via `moduleNameMapper`.
 
-Other deliberate limits: plan history is capped at eight entries so `localStorage`
-cannot grow without bound, and a superseded plan request is discarded by request id so a
-slow response cannot overwrite a newer one.
+Route-level code splitting is also in place, and it earns less than it looks like it
+should: every route uses the same UI kit, so it only keeps the sign-up page's own
+3.98 kB off the sign-in route. Worth keeping as the app grows, but not where the win
+came from.
 
-**Security.** Access tokens are attached by an Apollo auth link and cleared
-automatically when the server answers `UNAUTHENTICATED` or HTTP 401. The GraphQL
-endpoint used to be a hardcoded `http://` address of a specific EC2 instance committed
-to the repository; it is now configuration with a localhost default.
+## Known gaps
 
-## Limitations
-
-- **Tokens live in `localStorage`.** That is XSS-exposed. A production deployment should
-  move to an httpOnly refresh cookie; the session module is the single place that would
-  change.
-- **No token refresh.** `refreshToken` is stored but never exchanged — an expired access
-  token signs the user out rather than renewing silently.
-- **Plan history is per-device.** It is `localStorage`, not a server resource, so it does
-  not follow a coach to another browser and is not shared with athletes.
-- **Plans are not editable or exportable.** The Print button is the browser's own print
-  dialog against a print stylesheet; there is no PDF export and no way to tweak a
-  prescription before sending it.
-- **The built-in planner is rule-based, not a model.** It is a reasonable template
-  generator, not individualised coaching, and it does not know about injuries,
-  equipment or training history.
-- **Create React App is unmaintained.** react-scripts 5 still builds and tests cleanly
-  here, but a move to Vite is the obvious next infrastructure step. Note that CRA 5
-  ignores `postcss.config.js` and enables Tailwind purely because `tailwind.config.js`
-  exists — that detail does not survive the migration.
-- **The Docker image is unbuilt.** It is authored to a good standard but has not been
-  built or run in this environment.
-- **No end-to-end tests.** The suite covers units and component integration with a
-  mocked Apollo link; nothing exercises a real GraphQL server.
+- **Sign-in asks for an email and sends it as a username.** The field is labelled Email
+  and validated as one, then passed as the mutation's `username` variable. Whether that
+  works depends entirely on what the identity service accepts as a username.
+- **The athlete's goal never reaches the server.** `signup` sends name, username, email
+  and password only. The goal the planner works from is collected after sign-in and
+  lives only in this browser, so nothing about a coach's athletes is durable server-side.
+- **Nothing has been run against a real GraphQL server.** Every mutation shape here is
+  asserted against a mocked Apollo link. The contract is assumed, not verified.
+- **Tokens live in `localStorage`**, which is XSS-exposed. `src/lib/storage.js` is the
+  single place that would change to move to an httpOnly cookie.
+- **No token refresh.** `refreshToken` is stored because the server returns it and is
+  never exchanged — an expired access token signs the user out rather than renewing.
+- **Plan history is per-device.** It does not follow a coach to another browser and is
+  not shared with athletes.
+- **Plans are not editable or exportable.** Print is the browser's own dialog against a
+  stylesheet that hides the header and buttons. There is no PDF export and no way to
+  adjust a prescription before handing it over.
+- **The built-in planner is rule-based, not a model.** It is a defensible template
+  generator; it knows nothing about injuries, equipment or training history.
+- **Create React App is unmaintained.** react-scripts 5 still builds and tests cleanly,
+  but a move to Vite is the obvious next infrastructure step.
+- **No end-to-end tests**, and no accessibility audit beyond semantic markup and the
+  labels the form kit emits.
